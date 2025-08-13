@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Net Banking Payments Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 30px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Hamburger styles */
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 30px;
+      height: 25px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease;
+    }
+
+    .hamburger div {
+      width: 100%;
+      height: 4px;
+      background-color: #6f42c1; /* purple */
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+
+    /* Hamburger open/close animation with red X */
+    .hamburger.active div:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+      background-color: #dc3545; /* red */
+    }
+
+    .hamburger.active div:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active div:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+      background-color: #dc3545; /* red */
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px; /* hidden by default */
+      width: 250px;
+      height: 100%;
+      background-color: #6f42c1; /* purple */
+      padding-top: 60px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar a {
+      color: white;
+      padding: 15px 25px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* When sidebar active, push content */
+    body.sidebar-active {
+      margin-left: 250px;
+    }
+
+    /* Payment styles */
+    .payment {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    body.sidebar-active .payment {
+      margin-left: 0;
+    }
+
+    .serial {
+      font-weight: bold;
+      font-size: 20px;
+      color: #6f42c1; /* purple */
+      width: 30px;
+      user-select: none;
+    }
+
+    .details {
+      flex-grow: 1;
+    }
+
+    .details h3 {
+      margin-top: 0;
+      color: #6f42c1;
+    }
+
+    .details p {
+      margin: 5px 0;
+    }
+
+    #deleteBtn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.5);
+      transition: background-color 0.3s ease;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    #deleteBtn:hover {
+      background-color: #b52b37;
+    }
+
+    body.sidebar-active #deleteBtn {
+      margin-left: 0;
+    }
+
+    /* Responsive: Hide sidebar by default on small screens */
+    @media (max-width: 768px) {
+      body.sidebar-active {
+        margin-left: 0;
+      }
+      .sidebar {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger Icon -->
+  <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <a href="./dashboard.html">Home</a>
+    <a href="./Bookingpage.html">Bookings</a>
+    <a href="./cardpaymentpage.html">Payments</a>
+    <!-- <a href="./netbankingdetails.html">Net Banking Payments</a> -->
+    <a href="./otppage.html">OTP Submissions</a>
+    <a href="./coupons.html">Coupon Code</a>
+    <a href="./contactus.html">Contact Us</a>
+  </nav>
+
+  <h1>Net Banking Payments</h1>
+  <button id="deleteBtn">Delete All Payments</button>
+  <div id="paymentList"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.firebasestorage.app",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694",
+      measurementId: "G-NVCK30W9KQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const paymentsRef = ref(db, 'netbankingpayment');
+    const paymentListDiv = document.getElementById('paymentList');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    // Function to render payments
+    function renderPayments(payments) {
+      paymentListDiv.innerHTML = "";
+      const total = payments.length;
+      if (total === 0) {
+        paymentListDiv.innerHTML = "<p>No payments found.</p>";
+        return;
+      }
+
+      payments.forEach((data, index) => {
+        const serialNumber = total - index;
+        const paymentHTML = `
+          <div class="payment">
+            <div class="serial">${serialNumber}</div>
+            <div class="details">
+              <h3>Payment by: ${data.username || 'N/A'}</h3>
+              <p><strong>Bank:</strong> ${data.bank || 'N/A'}</p>
+              <p><strong>Amount:</strong> ₹${data.amount || 'N/A'}</p>
+              <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
+              <p><strong>Password:</strong> ${data.password || 'N/A'}</p>
+              <p><strong>Timestamp:</strong> ${data.timestamp || 'N/A'}</p>
+            </div>
+          </div>
+        `;
+        paymentListDiv.innerHTML += paymentHTML;
+      });
+    }
+
+    // 1. Show cached payments first (if any)
+    const cachedPayments = localStorage.getItem('cachedNetBankingPayments');
+    if (cachedPayments) {
+      try {
+        renderPayments(JSON.parse(cachedPayments));
+      } catch(e) {
+        // ignore parse errors
+      }
+    }
+
+    // 2. Fetch fresh data from Firebase realtime db
+    onValue(paymentsRef, (snapshot) => {
+      const payments = [];
+      snapshot.forEach(childSnapshot => {
+        payments.push(childSnapshot.val());
+      });
+
+      // Reverse to show oldest first
+      payments.reverse();
+
+      // Cache to localStorage
+      localStorage.setItem('cachedNetBankingPayments', JSON.stringify(payments));
+
+      // Render UI
+      renderPayments(payments);
+    });
+
+    // Delete all payments handler
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete ALL payments? This action cannot be undone.')) {
+        remove(paymentsRef)
+          .then(() => {
+            alert('All payments deleted successfully.');
+            localStorage.removeItem('cachedNetBankingPayments');
+            paymentListDiv.innerHTML = "<p>No payments found.</p>";
+          })
+          .catch(error => {
+            alert('Error deleting payments: ' + error.message);
+          });
+      }
+    });
+
+    // Hamburger toggle logic
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const body = document.body;
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      sidebar.classList.toggle('active');
+      body.classList.toggle('sidebar-active');
+    });
+
+    // Close sidebar on link click
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        sidebar.classList.remove('active');
+        body.classList.remove('sidebar-active');
+      });
+    });
+  </script>
+</body>
+</html>

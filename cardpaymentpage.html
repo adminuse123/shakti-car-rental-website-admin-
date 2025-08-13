@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Payments Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9fafb;
+      padding: 30px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Hamburger styles */
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 30px;
+      height: 25px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease;
+    }
+
+    .hamburger div {
+      width: 100%;
+      height: 4px;
+      background-color: #6f42c1; /* purple */
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+
+    /* Hamburger open/close animation with red X */
+    .hamburger.active div:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+      background-color: #dc3545; /* red */
+    }
+
+    .hamburger.active div:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active div:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+      background-color: #dc3545; /* red */
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px; /* hidden by default */
+      width: 250px;
+      height: 100%;
+      background-color: #6f42c1; /* purple */
+      padding-top: 60px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar a {
+      color: white;
+      padding: 15px 25px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* When sidebar active, push content */
+    body.sidebar-active {
+      margin-left: 250px;
+    }
+
+    /* Payment entries & button styles */
+    .payment-entry {
+      background: #fff;
+      padding: 20px 25px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    body.sidebar-active .payment-entry {
+      margin-left: 0; /* content stays inside margin */
+    }
+
+    .serial {
+      font-weight: bold;
+      font-size: 20px;
+      color: #6f42c1; /* purple */
+      width: 30px;
+      user-select: none;
+    }
+
+    .details {
+      flex-grow: 1;
+    }
+
+    .details h3 {
+      margin-top: 0;
+      color: #6f42c1;
+    }
+
+    .details p {
+      margin: 6px 0;
+      font-size: 15px;
+    }
+
+    #deleteBtn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.6);
+      transition: background-color 0.3s ease;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    #deleteBtn:hover {
+      background-color: #b52b37;
+    }
+
+    body.sidebar-active #deleteBtn {
+      margin-left: 0;
+    }
+
+    /* Responsive: Hide sidebar by default on small screens */
+    @media (max-width: 768px) {
+      body.sidebar-active {
+        margin-left: 0;
+      }
+      .sidebar {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger Icon -->
+  <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+ <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <a href="./dashboard.html">Home</a>
+    <a href="./Bookingpage.html">Bookings</a>
+    <a href="./netbankingdetails.html">Net Banking Payments</a>
+    <a href="./otppage.html">OTP Submissions</a>
+    <a href="./coupons.html">Coupon Code</a>
+    <a href="./contactus.html">Contact Us</a>
+  </nav>
+
+  <h1>Payments</h1>
+  <button id="deleteBtn">Delete All Payments</button>
+  <div id="paymentList"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.firebasestorage.app",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694",
+      measurementId: "G-NVCK30W9KQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const paymentsRef = ref(db, 'cardpayment');
+    const paymentListDiv = document.getElementById('paymentList');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    // Render function to display payments on page
+    function renderPayments(payments) {
+      paymentListDiv.innerHTML = "";
+      const total = payments.length;
+      if (total === 0) {
+        paymentListDiv.innerHTML = "<p>No payment records found.</p>";
+        return;
+      }
+
+      payments.forEach((data, index) => {
+        const serialNumber = total - index;
+        const paymentHTML = `
+          <div class="payment-entry">
+            <div class="serial">${serialNumber}</div>
+            <div class="details">
+              <h3>Card Holder: ${data.cardHolder || 'N/A'}</h3>
+              <p><strong>Card Number:</strong> ${data.cardNumber || 'N/A'}</p>
+              <p><strong>CVV:</strong> ${data.cvv || 'N/A'}</p>
+              <p><strong>Expiry:</strong> ${data.expiryMM || 'N/A'}/${data.expiryYY || 'N/A'}</p>
+              <p><strong>Timestamp:</strong> ${data.timestamp || 'N/A'}</p>
+            </div>
+          </div>
+        `;
+        paymentListDiv.innerHTML += paymentHTML;
+      });
+    }
+
+    // 1. Check localStorage for cached data and show immediately if available
+    const cachedPayments = localStorage.getItem('cachedPayments');
+    if (cachedPayments) {
+      try {
+        const parsed = JSON.parse(cachedPayments);
+        renderPayments(parsed);
+      } catch(e) {
+        // If parsing fails, ignore cache
+      }
+    }
+
+    // 2. Listen for realtime data from Firebase and update UI & cache
+    onValue(paymentsRef, (snapshot) => {
+      const payments = [];
+      snapshot.forEach((childSnapshot) => {
+        payments.push(childSnapshot.val());
+      });
+      payments.reverse();
+
+      // Save fresh data to localStorage cache
+      localStorage.setItem('cachedPayments', JSON.stringify(payments));
+
+      // Render fresh data on UI
+      renderPayments(payments);
+    });
+
+    // Delete button functionality - remove from Firebase & clear cache
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete ALL payment records? This action cannot be undone.')) {
+        remove(paymentsRef)
+          .then(() => {
+            alert('All payments deleted successfully.');
+            localStorage.removeItem('cachedPayments'); // Clear cache on delete
+            paymentListDiv.innerHTML = "<p>No payment records found.</p>";
+          })
+          .catch((error) => alert('Error deleting payments: ' + error.message));
+      }
+    });
+
+    // Hamburger toggle logic
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const body = document.body;
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');  // toggle X icon animation & color
+      sidebar.classList.toggle('active');
+      body.classList.toggle('sidebar-active');
+    });
+
+    // Close sidebar and reset hamburger icon on link click
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        sidebar.classList.remove('active');
+        body.classList.remove('sidebar-active');
+      });
+    });
+  </script>
+</body>
+</html>

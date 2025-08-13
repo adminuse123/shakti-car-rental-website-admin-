@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Firebase Bookings & Coupons</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ece9e6, #ffffff);
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 40px;
+      color: #333;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.01);
+      background: #eef6ff;
+    }
+
+    .details {
+      display: none;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .card.expanded .details {
+      display: block;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+
+    .clear-all-btn {
+      background: #ff4747;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 20px;
+      font-size: 16px;
+      display: block;
+      margin: 20px auto;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .clear-all-btn:hover {
+      background: #c70000;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📋 Bookings</h2>
+  <div class="section" id="bookingsDiv"></div>
+  <button class="clear-all-btn" onclick="clearAll('bookings')">Clear All Bookings</button>
+
+  <h2>🏷️ Coupons</h2>
+  <div class="section" id="couponsDiv"></div>
+  <button class="clear-all-btn" onclick="clearAll('coupons')">Clear All Coupons</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.appspot.com",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase();
+
+    const bookingsDiv = document.getElementById("bookingsDiv");
+    const couponsDiv = document.getElementById("couponsDiv");
+
+    function loadData(path, targetDiv, renderFunc) {
+      const dataRef = ref(db, path);
+      onValue(dataRef, (snapshot) => {
+        targetDiv.innerHTML = "";
+        if (snapshot.exists()) {
+          snapshot.forEach((child) => {
+            const data = child.val();
+            const key = child.key;
+            targetDiv.appendChild(renderFunc(data, key, path));
+          });
+        } else {
+          targetDiv.innerHTML = "<p>No data available</p>";
+        }
+      });
+    }
+
+    function renderBooking(data, key, path) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<strong>${data.name || "Unknown"}</strong> - ${data.phone || "No Phone"}<div class="details">
+        <p><strong>Email:</strong> ${data.email || "N/A"}</p>
+        <p><strong>Message:</strong> ${data.message || "N/A"}</p>
+        <p><strong>Timestamp:</strong> ${data.timestamp || "N/A"}</p>
+      </div>`;
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.textContent = "Delete";
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        remove(ref(db, `${path}/${key}`));
+      };
+      card.appendChild(delBtn);
+
+      card.addEventListener("click", () => {
+        card.classList.toggle("expanded");
+      });
+
+      return card;
+    }
+
+    function renderCoupon(data, key, path) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<strong>${data.couponCode || "No Code"}</strong><div class="details">
+        <p><strong>Email:</strong> ${data.email || "N/A"}</p>
+      </div>`;
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.textContent = "Delete";
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        remove(ref(db, `${path}/${key}`));
+      };
+      card.appendChild(delBtn);
+
+      card.addEventListener("click", () => {
+        card.classList.toggle("expanded");
+      });
+
+      return card;
+    }
+
+    function clearAll(path) {
+      if (confirm(`Are you sure you want to clear all data in ${path}?`)) {
+        remove(ref(db, path)).then(() => {
+          console.log(`${path} cleared`);
+        });
+      }
+    }
+
+    // Load bookings and coupons
+    loadData("bookings", bookingsDiv, renderBooking);
+    loadData("coupons", couponsDiv, renderCoupon);
+  </script>
+</body>
+</html>

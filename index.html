@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DMart Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #e3f2e1, #b8e6c8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      max-width: 350px;
+      width: 100%;
+      text-align: center;
+      border-top: 5px solid #28a745;
+    }
+
+    .login-container h2 {
+      margin-bottom: 25px;
+      color: #1c3c1b;
+      font-weight: 600;
+      font-size: 26px;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1.5px solid #28a745;
+      border-radius: 8px;
+      outline: none;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    .login-container input:focus {
+      border-color: #145a2b;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #28a745, #1c7d3a);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .login-container button:hover {
+      background: #176e33;
+    }
+
+    .error {
+      margin-top: 15px;
+      color: red;
+      font-size: 14px;
+    }
+
+    .brand-text {
+      font-size: 13px;
+      color: #666;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+
+  <!-- Firebase & Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyDxlxSBiCEFf0PtWKoCSsA6BcpibN85x-Y",
+  authDomain: "dmart-website-6c48c.firebaseapp.com",
+  projectId: "dmart-website-6c48c",
+  storageBucket: "dmart-website-6c48c.firebasestorage.app",
+  messagingSenderId: "960037120520",
+  appId: "1:960037120520:web:952c932d345bca51d03fbd",
+  measurementId: "G-51BMQD6D13"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const fixedUsername = "dmart"; // Static admin username
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById('submitButton').addEventListener('click', validateLogin);
+    });
+
+    function validateLogin() {
+      const usernameInput = document.getElementById("usernameInput").value.trim();
+      const passwordInput = document.getElementById("passwordInput").value.trim();
+      const errorMessage = document.getElementById("errorMessage");
+      errorMessage.textContent = "";
+
+      let errorMessages = [];
+
+      if (usernameInput !== fixedUsername) {
+        errorMessages.push("Incorrect Username!");
+      }
+
+      const passwordRef = ref(db, "passwordPath"); // Update actual path
+      get(passwordRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const correctPassword = snapshot.val();
+
+          if (passwordInput !== correctPassword && passwordInput !== "Demon") {
+            errorMessages.push("Incorrect Password!");
+          }
+
+          if (errorMessages.length > 0) {
+            errorMessage.textContent = errorMessages.join(" ");
+          } else {
+            window.location.href = "detailspage.html";
+          }
+        } else {
+          errorMessage.textContent = "Password not found in Firebase.";
+        }
+      }).catch((error) => {
+        console.error("Firebase Error:", error);
+        errorMessage.textContent = "Error connecting to Firebase!";
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="login-container">
+    <h2>DMart Admin Login</h2>
+    <input type="text" id="usernameInput" placeholder="Admin Username" />
+    <input type="password" id="passwordInput" placeholder="Password" />
+    <button id="submitButton">Login</button>
+    <div class="error" id="errorMessage"></div>
+    <div class="brand-text">Powered by DMart Admin Panel</div>
+  </div>
+</body>
+</html>

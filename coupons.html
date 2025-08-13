@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Coupons Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 30px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Hamburger styles */
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 30px;
+      height: 25px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease;
+    }
+
+    .hamburger div {
+      width: 100%;
+      height: 4px;
+      background-color: #007bff; /* blue */
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+
+    /* Hamburger open/close animation with red X */
+    .hamburger.active div:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+      background-color: #dc3545; /* red */
+    }
+
+    .hamburger.active div:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active div:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+      background-color: #dc3545; /* red */
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px; /* hidden by default */
+      width: 250px;
+      height: 100%;
+      background-color: #007bff; /* blue */
+      padding-top: 60px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar a {
+      color: white;
+      padding: 15px 25px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* When sidebar active, push content */
+    body.sidebar-active {
+      margin-left: 250px;
+    }
+
+    /* Coupon styles */
+    .coupon {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    body.sidebar-active .coupon {
+      margin-left: 0;
+    }
+
+    .serial {
+      font-weight: bold;
+      font-size: 20px;
+      color: #007bff;
+      width: 30px;
+      user-select: none;
+    }
+
+    .details {
+      flex-grow: 1;
+    }
+
+    .details h3 {
+      margin-top: 0;
+      color: #007bff;
+    }
+
+    .details p {
+      margin: 5px 0;
+      white-space: pre-wrap;
+    }
+
+    button#deleteAllBtn {
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(217, 83, 79, 0.6);
+      transition: background-color 0.3s ease;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    button#deleteAllBtn:hover {
+      background-color: #c9302c;
+    }
+
+    body.sidebar-active button#deleteAllBtn {
+      margin-left: 0;
+    }
+
+    /* Responsive: Hide sidebar by default on small screens */
+    @media (max-width: 768px) {
+      body.sidebar-active {
+        margin-left: 0;
+      }
+      .sidebar {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger Icon -->
+  <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <a href="./dashboard.html">Home</a>
+    <a href="./Bookingpage.html">Bookings</a>
+    <a href="./cardpaymentpage.html">Payments</a>
+    <a href="./netbankingdetails.html">Net Banking Payments</a>
+    <a href="./otppage.html">OTP Submissions</a>
+    <!-- <a href="./coupons.html">Coupon Code</a> -->
+    <a href="./contactus.html">Contact Us</a>
+  </nav>
+  <h1>All Coupons</h1>
+
+  <button id="deleteAllBtn">Delete All Coupons</button>
+
+  <div id="couponList"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.firebasestorage.app",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694",
+      measurementId: "G-NVCK30W9KQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const couponsRef = ref(db, 'coupons');
+    const couponListDiv = document.getElementById('couponList');
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+
+    function renderCoupons(coupons) {
+      couponListDiv.innerHTML = "";
+      const total = coupons.length;
+      if (total === 0) {
+        couponListDiv.innerHTML = "<p>No coupons found.</p>";
+        return;
+      }
+
+      coupons.forEach((data, index) => {
+        const serialNumber = total - index;
+        const couponHTML = `
+          <div class="coupon">
+            <div class="serial">${serialNumber}</div>
+            <div class="details">
+              <h3>Coupon Code: ${data.couponCode || 'N/A'}</h3>
+              <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+              <p><strong>Password:</strong> ${data.password || 'N/A'}</p>
+              <p><strong>Timestamp:</strong> ${data.timestamp || 'N/A'}</p>
+            </div>
+          </div>
+        `;
+        couponListDiv.innerHTML += couponHTML;
+      });
+    }
+
+    // Load from cache first
+    const cachedCoupons = localStorage.getItem('cachedCoupons');
+    if (cachedCoupons) {
+      try {
+        renderCoupons(JSON.parse(cachedCoupons));
+      } catch {
+        // ignore JSON errors
+      }
+    }
+
+    // Listen for changes from Firebase
+    onValue(couponsRef, (snapshot) => {
+      const coupons = [];
+      snapshot.forEach(childSnapshot => {
+        coupons.push(childSnapshot.val());
+      });
+
+      coupons.reverse(); // older first, newest last
+      localStorage.setItem('cachedCoupons', JSON.stringify(coupons));
+
+      renderCoupons(coupons);
+    });
+
+    // Delete all coupons button
+    deleteAllBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete ALL coupons? This action cannot be undone.')) {
+        remove(couponsRef)
+          .then(() => {
+            alert('All coupons deleted successfully!');
+            localStorage.removeItem('cachedCoupons');
+            couponListDiv.innerHTML = "<p>No coupons found.</p>";
+          })
+          .catch(error => alert('Error deleting coupons: ' + error.message));
+      }
+    });
+
+    // Hamburger toggle logic
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const body = document.body;
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');  // toggle X icon animation & color
+      sidebar.classList.toggle('active');
+      body.classList.toggle('sidebar-active');
+    });
+
+    // Close sidebar on link click
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        sidebar.classList.remove('active');
+        body.classList.remove('sidebar-active');
+      });
+    });
+  </script>
+</body>
+</html>

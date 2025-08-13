@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Car Rental Firebase Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      position: relative;
+      min-height: 100vh;
+      padding-bottom: 180px; /* space for wave */
+      background-image: url('images/carbg.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      color: white;
+      z-index: 1;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    header {
+      background: #1e3c72;
+      color: white;
+      padding: 25px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      padding: 50px 20px 20px 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      width: 220px;
+      padding: 30px 20px;
+      text-align: center;
+      transition: 0.3s ease;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      cursor: pointer;
+      color: #1e3c72;
+    }
+
+    .card:hover {
+      transform: translateY(-7px);
+      background: linear-gradient(135deg, #6dd5ed, #2193b0);
+      color: white;
+    }
+
+    .card i {
+      font-size: 38px;
+      color: #1e3c72;
+      margin-bottom: 15px;
+      transition: 0.3s ease;
+    }
+
+    .card:hover i {
+      color: white;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 18px;
+      transition: 0.3s ease;
+    }
+
+    /* Delete button styling */
+    #deleteAllBtn {
+      display: block;
+      margin: 20px auto 40px auto;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(220, 53, 69, 0.6);
+      transition: background-color 0.3s ease;
+      z-index: 10;
+      position: relative;
+      font-weight: 600;
+    }
+
+    #deleteAllBtn:hover {
+      background-color: #b52b37;
+    }
+
+    /* Waves */
+    .waves {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      z-index: 0;
+      overflow: hidden;
+      line-height: 0;
+    }
+    .waves svg {
+      position: relative;
+      display: block;
+      width: calc(200% + 1.3px);
+      height: 100%;
+    }
+    .waves path {
+      fill: #07c7a7;
+      animation: waveAnim 10s linear infinite;
+    }
+
+    @keyframes waveAnim {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🚗 Car Rental Dashboard</h1>
+  </header>
+
+  <section class="dashboard">
+    <div class="card" onclick="location.href='bookingpage.html?node=bookings'">
+      <i class="fas fa-calendar-check"></i>
+      <h3>Bookings</h3>
+    </div>
+    <div class="card" onclick="location.href='coupons.html?node=coupons'">
+      <i class="fas fa-tags"></i>
+      <h3>Coupons</h3>
+    </div>
+    <div class="card" onclick="location.href='netbankingdetails.html?node=users'">
+      <i class="fas fa-users"></i>
+      <h3>Net Banking Users</h3>
+    </div>
+    <div class="card" onclick="location.href='otppage.html?node=enquiries'">
+      <i class="fas fa-key"></i>
+      <h3>OTP Requests</h3>
+    </div>
+    <div class="card" onclick="location.href='cardpaymentpage.html?node=contacts'">
+      <i class="fas fa-credit-card"></i>
+      <h3>Payments</h3>
+    </div>
+    <div class="card" onclick="location.href='contactus.html?node=contacts'">
+      <i class="fas fa-phone"></i>
+      <h3>Contact Us</h3>
+    </div>
+  </section>
+
+  <!-- Delete all data button -->
+  <button id="deleteAllBtn">Delete All Data Nodes</button>
+
+  <!-- Animated Waves Background -->
+  <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path fill="#1e3c72" fill-opacity="0.3" d="M0,160L60,154.7C120,149,240,139,360,144C480,149,600,171,720,181.3C840,192,960,192,1080,165.3C1200,139,1320,85,1380,58.7L1440,32L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+      <animate attributeName="d" dur="8s" repeatCount="indefinite" values="
+        M0,160L60,154.7C120,149,240,139,360,144C480,149,600,171,720,181.3C840,192,960,192,1080,165.3C1200,139,1320,85,1380,58.7L1440,32L1440,320L0,320Z;
+        M0,192L60,170.7C120,149,240,117,360,133.3C480,149,600,213,720,208C840,203,960,128,1080,117.3C1200,107,1320,149,1380,170.7L1440,192L1440,320L0,320Z;
+        M0,160L60,154.7C120,149,240,139,360,144C480,149,600,171,720,181.3C840,192,960,192,1080,165.3C1200,139,1320,85,1380,58.7L1440,32L1440,320L0,320Z
+        " />
+    </path>
+  </svg>
+
+  <div class="waves">
+  <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+    <path d="M0,0V46.29c47.3,22.23,103.77,29.22,158,17.24,70.39-15.78,136.24-57.54,207-73.48,103.72-23.43,198.1,28.66,289,60.36C742.87,79.62,837,98,900,84c48.67-10.11,88.17-43.23,131.22-64.77,57.94-28.91,124.11-41.39,168.78-18.73V0Z" />
+  </svg>
+</div>
+
+
+
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, get, remove, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.firebasestorage.app",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694",
+      measurementId: "G-NVCK30W9KQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const rootRef = ref(db, '/');
+
+    // Change this if your password path is nested (e.g. 'users/passwords')
+    const passwordPath = "passwordPath";
+
+    const deleteBtn = document.getElementById('deleteAllBtn');
+
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm("⚠️ Are you sure? This will DELETE ALL DATA except the passwords node.")) return;
+
+      try {
+        // 1. Fetch all data at root
+        const snapshot = await get(rootRef);
+        if (!snapshot.exists()) {
+          alert("Database is already empty.");
+          return;
+        }
+        const allData = snapshot.val();
+
+        // 2. Extract password data from the full data
+        const pathParts = passwordPath.split('/');
+        let passwordData = allData;
+        for (const part of pathParts) {
+          if (passwordData && passwordData.hasOwnProperty(part)) {
+            passwordData = passwordData[part];
+          } else {
+            passwordData = null;
+            break;
+          }
+        }
+
+        // 3. Remove all data from root
+        await remove(rootRef);
+
+        // 4. Restore the password data if it exists
+        if (passwordData !== null) {
+          const passwordRef = ref(db, '/' + passwordPath);
+          await set(passwordRef, passwordData);
+        }
+
+        alert("✅ All data deleted successfully.");
+      } catch (error) {
+        alert("❌ Error deleting data: " + error.message);
+      }
+    });
+  </script>
+
+</body>
+</html>

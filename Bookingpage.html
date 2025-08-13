@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rides Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 30px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Hamburger styles */
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 30px;
+      height: 25px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease;
+    }
+
+    .hamburger div {
+      width: 100%;
+      height: 4px;
+      background-color: #17a2b8; /* teal */
+      border-radius: 2px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+
+    /* Hamburger open/close animation with red X */
+    .hamburger.active div:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+      background-color: #dc3545; /* red */
+    }
+
+    .hamburger.active div:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active div:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+      background-color: #dc3545; /* red */
+    }
+
+    /* Sidebar styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px; /* hidden by default */
+      width: 250px;
+      height: 100%;
+      background-color: #17a2b8; /* teal */
+      padding-top: 60px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar a {
+      color: white;
+      padding: 15px 25px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* When sidebar active, push content */
+    body.sidebar-active {
+      margin-left: 250px;
+    }
+
+    /* Ride styles */
+    .ride {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    body.sidebar-active .ride {
+      margin-left: 0;
+    }
+
+    .serial {
+      font-weight: bold;
+      font-size: 20px;
+      color: #17a2b8; /* teal */
+      width: 30px;
+      user-select: none;
+    }
+
+    .details {
+      flex-grow: 1;
+    }
+
+    .details h3 {
+      margin-top: 0;
+      color: #17a2b8;
+    }
+
+    .details p {
+      margin: 5px 0;
+      white-space: pre-wrap;
+    }
+
+    #deleteBtn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.5);
+      transition: background-color 0.3s ease;
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+    }
+
+    #deleteBtn:hover {
+      background-color: #b52b37;
+    }
+
+    body.sidebar-active #deleteBtn {
+      margin-left: 0;
+    }
+
+    /* Responsive: Hide sidebar by default on small screens */
+    @media (max-width: 768px) {
+      body.sidebar-active {
+        margin-left: 0;
+      }
+      .sidebar {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger Icon -->
+  <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <a href="./dashboard.html">Home</a>
+    <!-- <a href="./Bookingpage.html">Bookings</a> -->
+    <a href="./cardpaymentpage.html">Payments</a>
+    <a href="./netbankingdetails.html">Net Banking Payments</a>
+    <a href="./otppage.html">OTP Submissions</a>
+    <a href="./coupons.html">Coupon Code</a>
+    <a href="./contactus.html">Contact Us</a>
+  </nav>
+
+  <h1>All Bookings</h1>
+  <button id="deleteBtn">Delete All Bookings</button>
+  <div id="rideList"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.firebasestorage.app",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694",
+      measurementId: "G-NVCK30W9KQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const ridesRef = ref(db, 'bookingpage');
+    const rideListDiv = document.getElementById('rideList');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    function renderRides(rides) {
+      rideListDiv.innerHTML = "";
+      const total = rides.length;
+      if (total === 0) {
+        rideListDiv.innerHTML = "<p>No Booking found.</p>";
+        return;
+      }
+
+      rides.forEach((data, index) => {
+        const serialNumber = total - index;
+        const rideHTML = `
+          <div class="ride">
+            <div class="serial">${serialNumber}</div>
+            <div class="details">
+              <h3>Ride by: ${data.name || 'N/A'}</h3>
+              <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+              <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
+              <p><strong>Pickup:</strong> ${data.pickup || 'N/A'}</p>
+              <p><strong>Drop:</strong> ${data.drop || 'N/A'}</p>
+              <p><strong>Car Type:</strong> ${data.carType || 'N/A'}</p>
+              <p><strong>Cab Type:</strong> ${data.cabType || 'N/A'}</p>
+              <p><strong>Self Drive:</strong> ${data.selfDrive || 'N/A'}</p>
+              <p><strong>End Date:</strong> ${data.endDate || 'N/A'}</p>
+              <p><strong>Timestamp:</strong> ${data.timestamp || 'N/A'}</p>
+            </div>
+          </div>
+        `;
+        rideListDiv.innerHTML += rideHTML;
+      });
+    }
+
+    // Load from cache first
+    const cachedRides = localStorage.getItem('cachedRides');
+    if (cachedRides) {
+      try {
+        renderRides(JSON.parse(cachedRides));
+      } catch {
+        // ignore invalid JSON
+      }
+    }
+
+    // Listen for realtime updates from Firebase
+    onValue(ridesRef, (snapshot) => {
+      const rides = [];
+      snapshot.forEach(childSnapshot => {
+        rides.push(childSnapshot.val());
+      });
+
+      rides.reverse(); // show oldest first
+
+      localStorage.setItem('cachedRides', JSON.stringify(rides));
+      renderRides(rides);
+    });
+
+    // Delete all rides
+    deleteBtn.addEventListener('click', () => {
+      if(confirm('Are you sure you want to delete ALL Bookings? This action cannot be undone.')) {
+        remove(ridesRef)
+          .then(() => {
+            alert('All Bookings deleted successfully.');
+            localStorage.removeItem('cachedRides');
+            rideListDiv.innerHTML = "<p>No Booking found.</p>";
+          })
+          .catch(error => alert('Error deleting rides: ' + error.message));
+      }
+    });
+
+    // Hamburger toggle
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const body = document.body;
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      sidebar.classList.toggle('active');
+      body.classList.toggle('sidebar-active');
+    });
+
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        sidebar.classList.remove('active');
+        body.classList.remove('sidebar-active');
+      });
+    });
+  </script>
+</body>
+</html>
