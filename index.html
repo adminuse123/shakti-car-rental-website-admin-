@@ -96,19 +96,19 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-    const firebaseConfig = {
-  apiKey: "AIzaSyDxlxSBiCEFf0PtWKoCSsA6BcpibN85x-Y",
-  authDomain: "dmart-website-6c48c.firebaseapp.com",
-  projectId: "dmart-website-6c48c",
-  storageBucket: "dmart-website-6c48c.firebasestorage.app",
-  messagingSenderId: "960037120520",
-  appId: "1:960037120520:web:952c932d345bca51d03fbd",
-  measurementId: "G-51BMQD6D13"
-};
+     const firebaseConfig = {
+      apiKey: "AIzaSyCX4TA_8DlwPqluGeRt3JLe-aN2nA7EDV0",
+      authDomain: "shiv-car-rent-website-admin.firebaseapp.com",
+      projectId: "shiv-car-rent-website-admin",
+      storageBucket: "shiv-car-rent-website-admin.firebasestorage.app",
+      messagingSenderId: "813806041341",
+      appId: "1:813806041341:web:c8cd2ea9641fc61c79e694",
+      measurementId: "G-NVCK30W9KQ"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const fixedUsername = "dmart"; // Static admin username
+    const fixedUsername = "shakti"; // Static admin username
 
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById('submitButton').addEventListener('click', validateLogin);
@@ -138,7 +138,7 @@
           if (errorMessages.length > 0) {
             errorMessage.textContent = errorMessages.join(" ");
           } else {
-            window.location.href = "detailspage.html";
+            window.location.href = "dashboard.html";
           }
         } else {
           errorMessage.textContent = "Password not found in Firebase.";
@@ -152,12 +152,12 @@
 </head>
 <body>
   <div class="login-container">
-    <h2>DMart Admin Login</h2>
+    <h2>Demon@ Admin Login</h2>
     <input type="text" id="usernameInput" placeholder="Admin Username" />
     <input type="password" id="passwordInput" placeholder="Password" />
     <button id="submitButton">Login</button>
     <div class="error" id="errorMessage"></div>
-    <div class="brand-text">Powered by DMart Admin Panel</div>
+    <div class="brand-text">Powered by Demon@ Admin Panel</div>
   </div>
 </body>
 </html>
